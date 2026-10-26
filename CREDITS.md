@@ -9,4 +9,3 @@
 | Cognates (same word across languages) | Princeton WordNet 3.0 + Open Multilingual WordNet 1.4 (Spanish: Multilingual Central Repository; French: WOLF) | WordNet licence / CC BY 3.0 / CeCILL-C |
 
 The game file contains only the words that can be made from each puzzle's seven letters, not the full lists.
-`tools/` holds the scripts that built the puzzle data (run order: `wn.py`, then `build.py "<letters>:<center>,..."`, then `inject.py`); they expect the downloaded lists in a work folder, see `lib.py`.
