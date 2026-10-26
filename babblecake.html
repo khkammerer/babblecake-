@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>babblecake</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0E1B3D;--panel:#16254F;--line:#2F4580;--bubble:#5BB8FF;--bubble-edge:#A8DAFF;--yellow:#FFD23F;--red:#FF4D4D;--orange:#FF8A1F;--ink:#0A1F5C;--text:#FFFFFF;--muted:#C9D6F5;--dim:#7FA3E6;--word:#1A2B5C;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--navy:#0E1B3D;--panel:#16254F;--line:#2F4580;--bubble:#5BB8FF;--bubble-edge:#A8DAFF;--yellow:#FFD23F;--red:#FF4D4D;--orange:#FF8A1F;--ink:#0A1F5C;--text:#FFFFFF;--muted:#C9D6F5;--dim:#7FA3E6;--word:#1A2B5C}}
+:root[data-theme="dark"]{--navy:#0E1B3D;--panel:#16254F;--line:#2F4580;--bubble:#5BB8FF;--bubble-edge:#A8DAFF;--yellow:#FFD23F;--red:#FF4D4D;--orange:#FF8A1F;--ink:#0A1F5C;--text:#FFFFFF;--muted:#C9D6F5;--dim:#7FA3E6;--word:#1A2B5C}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--navy)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--navy);color:var(--text);font-family:Poppins,system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+button{font-family:inherit}
+#app{max-width:430px;margin:0 auto;padding:8px 20px 14px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.mark{font-size:32px;font-weight:700;letter-spacing:-1.5px;line-height:1;color:var(--orange);height:34px;display:flex;align-items:center}
+.tabs{display:flex;gap:8px;width:100%}
+.tab{flex:1 1 0;min-width:0;height:38px;border-radius:12px;border:2px solid var(--bubble);font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;white-space:nowrap}
+.tab.en{background:var(--bubble);color:var(--ink)}
+.tab.es{background:var(--yellow);border-color:var(--yellow);color:var(--ink)}
+.tab.fr{background:var(--text);border-color:var(--text);color:var(--ink)}
+.word{position:relative;display:flex;align-items:center;justify-content:center;width:92%;min-height:54px;border-radius:18px;background:var(--word);border:2px solid var(--bubble);margin-top:4px;padding:0 14px;overflow:hidden}
+.word .t{font-size:30px;font-weight:600;letter-spacing:4px;color:var(--text);white-space:nowrap}
+.word .ph{font-size:13px;color:var(--dim);font-weight:400;white-space:nowrap}
+.word.shake{animation:shake .38s}
+.word.m-ok,.word.m-red,.word.m-yellow{color:var(--ink)}
+.word.m-ok{background:var(--bubble);border-color:var(--bubble-edge)}
+.word.m-red{background:var(--red);border-color:var(--red)}
+.word.m-yellow{background:var(--yellow);border-color:var(--yellow)}
+.word.m-err{background:var(--panel)}
+.word .mt{font-size:15px;font-weight:600;text-align:center;line-height:1.25;color:inherit}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.msg{display:flex;align-items:center;justify-content:center;gap:8px;min-height:28px;padding:0 14px;border-radius:10px;font-size:14px;font-weight:500;background:var(--panel);color:var(--muted);text-align:center}
+.msg.err{background:var(--panel);color:var(--text)}
+.msg.idle{background:transparent}
+.msg.red{background:var(--red);color:var(--ink);font-weight:700}
+.msg.yellow{background:var(--yellow);color:var(--ink);font-weight:700}
+.msg.ok{background:var(--bubble);color:var(--ink);font-weight:600}
+#bwrap{flex:none;width:290px;height:290px}
+#board{position:relative;width:290px;height:290px;transform-origin:0 0}
+.bub{position:absolute;width:86px;height:86px;padding:0;border-radius:50%;border:2px solid var(--bubble-edge);background:var(--bubble);color:var(--ink);font-size:36px;font-weight:600;line-height:1;box-shadow:0 0 22px rgba(91,184,255,0.55),inset -5px -7px 0 rgba(10,31,92,0.18),inset 4px 4px 0 rgba(255,255,255,0.4);cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation;text-transform:uppercase}
+.bub:active{transform:scale(.95)}
+.bub.c{width:92px;height:92px;border-color:#FFE88A;background:var(--yellow);font-size:40px;font-weight:700;box-shadow:0 0 26px rgba(255,210,63,0.65),inset -5px -7px 0 rgba(10,31,92,0.16),inset 4px 4px 0 rgba(255,255,255,0.5)}
+.pop{position:absolute;z-index:10;display:flex;gap:6px;padding:6px;border-radius:14px;background:var(--panel);border:2px solid var(--bubble);box-shadow:0 6px 20px rgba(0,0,0,.45)}
+.pk{width:44px;height:44px;border-radius:12px;border:2px solid var(--bubble);background:var(--bubble);color:var(--ink);font-size:22px;font-weight:600;cursor:pointer}
+.actions{display:flex;align-items:center;justify-content:center;gap:12px;width:100%}
+.btn{height:46px;padding:0 24px;border-radius:14px;border:2px solid var(--bubble);background:transparent;color:var(--text);font-size:17px;font-weight:500;cursor:pointer}
+.btn.round{width:46px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.btn.enter{padding:0 30px;border-color:var(--red);background:var(--red);color:var(--ink);font-weight:700;box-shadow:0 0 18px rgba(255,77,77,0.45)}
+.finish{width:100%;height:40px;border-radius:14px;border:2px solid var(--bubble);background:transparent;color:var(--text);font-size:16px;font-weight:500;cursor:pointer}
+.panel{width:100%;border-radius:18px;background:var(--panel);border:2px solid var(--line);padding:12px 14px;display:flex;flex-direction:column;gap:8px;flex:1 1 0;min-height:0;overflow:auto}
+.ph-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lvl{font-size:14px;font-weight:600}
+.sc{font-size:13px;color:var(--muted)}
+.dots{display:flex;gap:6px}
+.dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--dim);background:transparent}
+.dot.on{background:var(--yellow);border-color:var(--yellow)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start}
+.chip{height:28px;padding:0 10px;border-radius:14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;border:2px solid transparent}
+.chip.en{background:var(--bubble);color:var(--ink)}
+.chip.es{background:var(--yellow);color:var(--ink)}
+.chip.fr{background:var(--text);color:var(--ink)}
+.chip.cog{box-shadow:0 0 0 2px var(--red)}
+.chip .lg{display:flex;gap:3px}
+.chip .lg i{width:8px;height:8px;border-radius:50%;display:block;border:1.5px solid currentColor;opacity:.85}
+.empty{font-size:13px;color:var(--dim)}
+#modal{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(5,10,30,0.72);display:none;align-items:center;justify-content:center;padding:0 30px;z-index:50}
+#modal.on{display:flex}
+.dlg{width:100%;max-width:360px;border-radius:18px;background:var(--panel);border:2px solid var(--bubble);padding:24px 22px;display:flex;flex-direction:column;gap:12px}
+.dlg h2{margin:0;font-size:24px;font-weight:600}
+.dlg p{margin:0;font-size:15px;line-height:1.5;color:var(--muted)}
+.dlg .col{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.dbtn{height:48px;border-radius:14px;border:2px solid var(--bubble);background:transparent;color:var(--text);font-size:16px;font-weight:500;cursor:pointer}
+.dbtn.pri{background:var(--bubble);color:var(--ink);font-weight:600}
+.dbtn.fin{border-color:var(--red)}
+#results{display:none}
+#results.on{display:flex}
+.res{max-width:430px;margin:0 auto;padding:14px 20px 32px;display:flex;flex-direction:column;align-items:center;gap:14px;width:100%}
+.big{font-size:44px;font-weight:700;color:var(--orange);letter-spacing:-1px;line-height:1}
+.sub{font-size:16px;color:var(--muted)}
+.sec{width:100%;display:flex;flex-direction:column;gap:10px}
+.sec h3{margin:0;font-size:16px;font-weight:600}
+.sec .note{font-size:13px;color:var(--muted);margin-top:-4px}
+.card{border-radius:14px;background:var(--panel);border:2px solid var(--line);padding:10px 12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.rv{height:30px;padding:0 10px;border-radius:15px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;border:2px dashed var(--dim);color:var(--muted);background:transparent}
+.rv.got{border-style:solid;border-color:transparent;color:var(--ink);box-shadow:0 0 0 2px var(--red)}
+.rv.got.en{background:var(--bubble)}
+.rv.got.es{background:var(--yellow)}
+.rv.got.fr{background:var(--text)}
+.rv small{font-size:10px;font-weight:700;opacity:.8;text-transform:uppercase}
+details{width:100%;border-radius:14px;background:var(--panel);border:2px solid var(--line);padding:10px 12px}
+summary{cursor:pointer;font-size:15px;font-weight:600}
+details h4{margin:12px 0 6px;font-size:13px;color:var(--muted);font-weight:600}
+.row2{display:flex;gap:10px;width:100%}
+.row2 .btn{flex:1 1 0;padding:0 10px}
+.toast{font-size:13px;color:var(--yellow);min-height:18px}
+
+.bub.glow{animation:bubglow 1.1s ease-in-out}
+@keyframes bubglow{0%{transform:translateX(0) scale(1);filter:brightness(1)}12%{transform:translateX(-7px) scale(1.07) rotate(-3deg);filter:brightness(1.35) drop-shadow(0 0 14px #fff)}28%{transform:translateX(7px) scale(1.07) rotate(3deg);filter:brightness(1.4) drop-shadow(0 0 18px #fff)}44%{transform:translateX(-6px) scale(1.05) rotate(-2deg);filter:brightness(1.35) drop-shadow(0 0 14px #fff)}60%{transform:translateX(5px) scale(1.04) rotate(2deg);filter:brightness(1.25) drop-shadow(0 0 10px #fff)}80%{transform:translateX(-2px) scale(1.02);filter:brightness(1.12)}100%{transform:translateX(0) scale(1);filter:brightness(1)}}
+#cakepop{position:fixed;left:0;top:0;width:100%;height:100%;display:none;align-items:center;justify-content:center;flex-direction:column;gap:6px;z-index:60;pointer-events:none;background:rgba(5,10,30,0.6)}
+#cakepop.on{display:flex;animation:cakefade 3s ease-in-out forwards}
+#cakepop svg{width:230px;height:230px;animation:cakepop .6s cubic-bezier(.2,1.4,.4,1)}
+#cakepop .cw{font-size:38px;font-weight:700;color:var(--orange);letter-spacing:-1px;text-align:center;animation:cakepop .6s .1s cubic-bezier(.2,1.4,.4,1) backwards}
+@keyframes cakepop{0%{transform:scale(.2);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes cakefade{0%{opacity:0}8%{opacity:1}78%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion: reduce){.bub.glow{animation:none}#cakepop svg,#cakepop .cw{animation:none}}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="mark">babblecake</div>
+<div class="tabs" id="tabs"></div>
+<div class="word" id="word"></div>
+<div id="bwrap"><div id="board"></div></div>
+<div class="actions">
+<button type="button" class="btn" id="del">Delete</button>
+<button type="button" class="btn round" id="shuf" aria-label="Shuffle letters"><svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 0 1-14 5.3"/><path d="M4 12a8 8 0 0 1 14-5.3"/><path d="M18 3v4h-4"/><path d="M6 21v-4h4"/></svg></button>
+<button type="button" class="btn enter" id="ent">Enter</button>
+</div>
+<button type="button" class="finish" id="fin">Finished</button>
+<div class="panel" id="panel"></div>
+</div>
+
+<div id="results"><div class="res" id="resbody"></div></div>
+
+<div id="cakepop" aria-live="polite"><svg viewBox="0 0 200 200" aria-hidden="true"><ellipse cx="100" cy="176" rx="82" ry="12" fill="rgba(0,0,0,.3)"/><rect x="28" y="116" width="144" height="56" rx="12" fill="#FF8A1F"/><rect x="38" y="78" width="124" height="46" rx="12" fill="#FFD23F"/><path d="M38 96 q10 14 20 0 q10 14 20 0 q10 14 20 0 q10 14 20 0 q10 14 24 0 v-8 h-104z" fill="#fff"/><path d="M28 134 q12 16 24 0 q12 16 24 0 q12 16 24 0 q12 16 24 0 q12 16 24 0 q12 16 24 0 v-10 h-144z" fill="#fff"/><g fill="#5BB8FF"><rect x="64" y="52" width="9" height="28" rx="3"/><rect x="95" y="46" width="9" height="34" rx="3"/><rect x="126" y="52" width="9" height="28" rx="3"/></g><g fill="#FF4D4D"><ellipse cx="68.5" cy="44" rx="6" ry="9"/><ellipse cx="99.5" cy="37" rx="6" ry="9"/><ellipse cx="130.5" cy="44" rx="6" ry="9"/></g></svg><div class="cw" id="cakeword"></div></div>
+<div id="modal">
+<div class="dlg" role="dialog" aria-label="Are you sure?">
+<h2>Are you sure?</h2>
+<p>Once you finish, your score is locked and the other languages are revealed.</p>
+<div class="col">
+<button type="button" class="dbtn pri" id="keep">Keep playing</button>
+<button type="button" class="dbtn fin" id="doFin">Finish</button>
+</div>
+</div>
+</div>
+
+<script>
+const PUZZLES = [{"id": "aeilnrt-e", "num": 1, "center": "e", "outer": ["a", "i", "l", "n", "r", "t"], "letters": ["a", "e", "i", "l", "n", "r", "t"], "words": {"ale": ["en"], "alert": ["en"], "alien": ["en"], "alter": ["en"], "antenna": ["en"], "are": ["en"], "arterial": ["en", "es"], "ate": ["en"], "ear": ["en"], "earn": ["en"], "eat": ["en"], "eaten": ["en"], "elate": ["en"], "elite": ["en"], "entail": ["en"], "entire": ["en"], "entrail": ["en"], "inert": ["en"], "inlet": ["en"], "inter": ["en"], "internal": ["en"], "ire": ["en"], "lane": ["en"], "latent": ["en", "fr"], "later": ["en"], "lateral": ["en", "es"], "lea": ["en"], "lean": ["en"], "learn": ["en"], "lent": ["en", "fr"], "lie": ["en"], "lien": ["en", "fr"], "line": ["en"], "linear": ["en"], "liner": ["en"], "near": ["en"], "net": ["en", "fr"], "rate": ["en"], "real": ["en", "es"], "reliant": ["en"], "renal": ["en", "es"], "rent": ["en"], "rental": ["en"], "retail": ["en"], "retain": ["en"], "retina": ["en", "es"], "retinal": ["en"], "tale": ["en"], "talent": ["en", "fr"], "tea": ["en"], "teal": ["en"], "tear": ["en"], "tent": ["en"], "tern": ["en"], "tie": ["en"], "tile": ["en"], "tiler": ["en"], "tine": ["en"], "tire": ["en"], "alentar": ["es"], "alerta": ["es"], "aleta": ["es"], "alienta": ["es"], "alterar": ["es"], "ante": ["es"], "antena": ["es"], "ente": ["es"], "entera": ["es"], "entrar": ["es"], "interna": ["es"], "latente": ["es"], "leer": ["es"], "lenta": ["es"], "lente": ["es", "fr"], "lineal": ["es"], "llena": ["es"], "relata": ["es"], "reta": ["es"], "retar": ["es"], "retener": ["es"], "talle": ["es"], "tela": ["es"], "telar": ["es"], "ten": ["es"], "tener": ["es"], "tierra": ["es"], "tinte": ["es"], "tren": ["es"], "aile": ["fr"], "alerte": ["fr"], "alinéa": ["fr"], "antenne": ["fr"], "arrière": ["fr"], "artériel": ["fr"], "elle": ["fr"], "entaille": ["fr"], "entier": ["fr"], "entrer": ["fr"], "interne": ["fr"], "latéral": ["fr"], "lier": ["fr"], "lierre": ["fr"], "linéaire": ["fr"], "lire": ["fr"], "nette": ["fr"], "nie": ["fr"], "nier": ["fr"], "ralenti": ["fr"], "reine": ["fr"], "relier": ["fr"], "retenir": ["fr"], "retirer": ["fr"], "retrait": ["fr"], "rien": ["fr"], "rire": ["fr"], "rénal": ["fr"], "rétine": ["fr"], "taille": ["fr"], "taire": ["fr"], "tenait": ["fr"], "terne": ["fr"], "tiare": ["fr"], "tirer": ["fr"], "trier": ["fr"], "ténia": ["fr"], "élan": ["fr"], "élite": ["fr"], "été": ["fr"]}, "cousin": ["alert", "alerta", "alerte", "antena", "antenna", "antenne", "arterial", "artériel", "elite", "interna", "internal", "interne", "latent", "latente", "lateral", "latéral", "lineal", "linear", "linéaire", "renal", "retina", "rénal", "rétine", "élite"], "groups": [[["alert", ["en"]], ["alerta", ["es"]], ["alerte", ["fr"]]], [["antenna", ["en"]], ["antena", ["es"]], ["antenne", ["fr"]]], [["internal", ["en"]], ["interna", ["es"]], ["interne", ["fr"]]], [["linear", ["en"]], ["lineal", ["es"]], ["linéaire", ["fr"]]], [["lateral", ["en", "es"]], ["latéral", ["fr"]]], [["arterial", ["en", "es"]], ["artériel", ["fr"]]], [["renal", ["en", "es"]], ["rénal", ["fr"]]], [["retina", ["en", "es"]], ["rétine", ["fr"]]], [["latent", ["en", "fr"]], ["latente", ["es"]]], [["elite", ["en"]], ["élite", ["fr"]]], [["lent", ["en", "fr"]]], [["lente", ["es", "fr"]]], [["lien", ["en", "fr"]]], [["net", ["en", "fr"]]], [["real", ["en", "es"]]], [["talent", ["en", "fr"]]]], "top": 457, "pangrams": ["entrail", "internal", "ralenti", "reliant", "retinal"]}, {"id": "aeilnot-t", "num": 2, "center": "t", "outer": ["i", "l", "n", "o", "a", "e"], "letters": ["a", "e", "i", "l", "n", "o", "t"], "words": {"ant": ["en"], "antenna": ["en"], "ate": ["en"], "atone": ["en"], "eat": ["en"], "eaten": ["en"], "elate": ["en"], "elation": ["en"], "elite": ["en"], "entail": ["en"], "inlet": ["en"], "intone": ["en"], "latent": ["en", "fr"], "lent": ["en", "fr"], "lint": ["en"], "lit": ["en"], "lot": ["en", "fr"], "lotion": ["en", "fr"], "nation": ["en", "fr"], "net": ["en", "fr"], "nit": ["en"], "not": ["en"], "note": ["en", "fr"], "notion": ["en", "fr"], "tail": ["en"], "tale": ["en"], "talent": ["en", "fr"], "talon": ["en", "fr"], "tan": ["en", "es"], "tea": ["en"], "teal": ["en"], "tent": ["en"], "tie": ["en"], "tile": ["en"], "tin": ["en"], "tine": ["en"], "toe": ["en"], "toil": ["en"], "toll": ["en"], "ton": ["en", "fr"], "tonal": ["en", "es", "fr"], "tone": ["en"], "total": ["en", "es", "fr"], "aleta": ["es"], "alienta": ["es"], "aliento": ["es"], "alta": ["es"], "alto": ["es"], "anota": ["es"], "ante": ["es"], "antena": ["es"], "ente": ["es"], "lata": ["es"], "latente": ["es"], "latín": ["es"], "latón": ["es"], "lenta": ["es"], "lente": ["es", "fr"], "lento": ["es"], "nata": ["es"], "natal": ["es"], "nota": ["es"], "tal": ["es"], "talento": ["es"], "talle": ["es"], "tallo": ["es"], "talón": ["es"], "tanto": ["es"], "tela": ["es"], "telón": ["es"], "ten": ["es"], "tilo": ["es"], "tina": ["es"], "tinta": ["es"], "tinte": ["es"], "tinto": ["es"], "tonel": ["es"], "tono": ["es"], "tía": ["es"], "antenne": ["fr"], "atonie": ["fr"], "entaille": ["fr"], "nette": ["fr"], "taille": ["fr"], "tenait": ["fr"], "toilette": ["fr"], "tonne": ["fr"], "ténia": ["fr"], "élite": ["fr"], "étole": ["fr"], "été": ["fr"]}, "cousin": ["antena", "antenna", "antenne", "elite", "latent", "latente", "talent", "talento", "élite"], "groups": [[["antenna", ["en"]], ["antena", ["es"]], ["antenne", ["fr"]]], [["talent", ["en", "fr"]], ["talento", ["es"]]], [["latent", ["en", "fr"]], ["latente", ["es"]]], [["elite", ["en"]], ["élite", ["fr"]]], [["lent", ["en", "fr"]]], [["lente", ["es", "fr"]]], [["lot", ["en", "fr"]]], [["lotion", ["en", "fr"]]], [["nation", ["en", "fr"]]], [["net", ["en", "fr"]]], [["note", ["en", "fr"]]], [["notion", ["en", "fr"]]], [["talon", ["en", "fr"]]], [["tan", ["en", "es"]]], [["ton", ["en", "fr"]]], [["tonal", ["en", "es", "fr"]]], [["total", ["en", "es", "fr"]]]], "top": 279, "pangrams": ["aliento", "elation"]}, {"id": "aceilnp-a", "num": 3, "center": "a", "outer": ["n", "p", "c", "e", "i", "l"], "letters": ["a", "c", "e", "i", "l", "n", "p"], "words": {"ace": ["en"], "ail": ["en", "fr"], "ale": ["en"], "alien": ["en"], "alpine": ["en"], "can": ["en"], "cancel": ["en"], "cane": ["en", "fr"], "canine": ["en"], "cap": ["en", "fr"], "cape": ["en"], "clan": ["en", "es", "fr"], "clap": ["en"], "clean": ["en"], "clinical": ["en"], "lace": ["en"], "lain": ["en"], "lane": ["en"], "lap": ["en"], "lea": ["en"], "lean": ["en"], "leap": ["en"], "nacelle": ["en", "fr"], "nap": ["en"], "nape": ["en"], "pace": ["en"], "paella": ["en", "es", "fr"], "pail": ["en"], "pain": ["en", "fr"], "pal": ["en"], "pale": ["en"], "pan": ["en", "es"], "pane": ["en"], "panel": ["en", "es"], "panic": ["en"], "pea": ["en"], "peal": ["en"], "pecan": ["en"], "pelican": ["en"], "penal": ["en"], "pinnacle": ["en"], "place": ["en"], "plain": ["en"], "plan": ["en", "es", "fr"], "plane": ["en"], "ala": ["es"], "alcance": ["es"], "alpaca": ["es"], "cal": ["es"], "cana": ["es"], "canal": ["es", "fr"], "canapé": ["es"], "capa": ["es"], "capilla": ["es"], "cena": ["es"], "inicial": ["es"], "lana": ["es"], "lapa": ["es"], "lineal": ["es"], "llena": ["es"], "nace": ["es"], "pala": ["es"], "pelea": ["es"], "pena": ["es"], "pila": ["es"], "plena": ["es"], "aile": ["fr"], "alinéa": ["fr"], "alpin": ["fr"], "cale": ["fr"], "canin": ["fr"], "canne": ["fr"], "lapin": ["fr"], "paille": ["fr"], "palan": ["fr"], "pinacle": ["fr"], "plaine": ["fr"], "pâle": ["fr"], "pélican": ["fr"], "élan": ["fr"]}, "cousin": ["alpin", "alpine", "canin", "canine", "pelican", "pinacle", "pinnacle", "pélican"], "groups": [[["pelican", ["en"]], ["pélican", ["fr"]]], [["pinnacle", ["en"]], ["pinacle", ["fr"]]], [["canine", ["en"]], ["canin", ["fr"]]], [["alpine", ["en"]], ["alpin", ["fr"]]], [["ail", ["en", "fr"]]], [["canal", ["es", "fr"]]], [["cane", ["en", "fr"]]], [["cap", ["en", "fr"]]], [["clan", ["en", "es", "fr"]]], [["nacelle", ["en", "fr"]]], [["paella", ["en", "es", "fr"]]], [["pain", ["en", "fr"]]], [["pan", ["en", "es"]]], [["panel", ["en", "es"]]], [["plan", ["en", "es", "fr"]]]], "top": 244, "pangrams": ["pelican", "pinacle", "pinnacle", "pélican"]}, {"id": "aelnost-t", "num": 4, "center": "t", "outer": ["a", "e", "l", "n", "o", "s"], "letters": ["a", "e", "l", "n", "o", "s", "t"], "words": {"ant": ["en"], "antenna": ["en"], "ate": ["en"], "atone": ["en"], "east": ["en"], "eat": ["en"], "eaten": ["en"], "eats": ["en"], "elate": ["en"], "last": ["en"], "latent": ["en", "fr"], "least": ["en"], "lent": ["en", "fr"], "lest": ["en"], "lets": ["en"], "lost": ["en"], "lot": ["en", "fr"], "lots": ["en"], "nest": ["en"], "net": ["en", "fr"], "nets": ["en"], "not": ["en"], "note": ["en", "fr"], "notes": ["en"], "onset": ["en"], "salt": ["en"], "sate": ["en"], "seat": ["en"], "slat": ["en"], "slate": ["en"], "slot": ["en"], "stale": ["en"], "steal": ["en"], "stolen": ["en"], "stone": ["en"], "tale": ["en"], "talent": ["en", "fr"], "talents": ["en", "fr"], "tales": ["en"], "talon": ["en", "fr"], "tan": ["en", "es"], "tea": ["en"], "teal": ["en"], "teas": ["en"], "tens": ["en"], "tent": ["en"], "toast": ["en"], "toe": ["en"], "toes": ["en"], "toll": ["en"], "tolls": ["en"], "ton": ["en", "fr"], "tonal": ["en", "es", "fr"], "tone": ["en"], "tons": ["en"], "total": ["en", "es", "fr"], "aleta": ["es"], "alta": ["es"], "alto": ["es"], "anota": ["es"], "ante": ["es"], "antena": ["es"], "ente": ["es"], "esta": ["es"], "este": ["es"], "esto": ["es"], "lata": ["es"], "latas": ["es"], "latente": ["es"], "latón": ["es"], "lenta": ["es"], "lente": ["es", "fr"], "lento": ["es"], "lentos": ["es"], "nata": ["es"], "natal": ["es"], "nota": ["es"], "notas": ["es"], "salto": ["es"], "santo": ["es"], "santos": ["es"], "sonata": ["es"], "sótano": ["es"], "tal": ["es"], "talas": ["es"], "talento": ["es"], "talentos": ["es"], "talle": ["es"], "tallo": ["es"], "talón": ["es"], "tanto": ["es"], "tela": ["es"], "telón": ["es"], "ten": ["es"], "tonel": ["es"], "tono": ["es"], "tonos": ["es"], "tos": ["es"], "totales": ["es", "fr"], "antenne": ["fr"], "nette": ["fr"], "sonate": ["fr"], "stalle": ["fr"], "tas": ["fr"], "tenons": ["fr"], "tonne": ["fr"], "étole": ["fr"], "été": ["fr"]}, "cousin": ["antena", "antenna", "antenne", "latent", "latente", "sonata", "sonate", "talent", "talento", "talentos", "talents"], "groups": [[["antenna", ["en"]], ["antena", ["es"]], ["antenne", ["fr"]]], [["talent", ["en", "fr"]], ["talento", ["es"]]], [["talents", ["en", "fr"]], ["talentos", ["es"]]], [["latent", ["en", "fr"]], ["latente", ["es"]]], [["sonata", ["es"]], ["sonate", ["fr"]]], [["lent", ["en", "fr"]]], [["lente", ["es", "fr"]]], [["lot", ["en", "fr"]]], [["net", ["en", "fr"]]], [["note", ["en", "fr"]]], [["talon", ["en", "fr"]]], [["tan", ["en", "es"]]], [["ton", ["en", "fr"]]], [["tonal", ["en", "es", "fr"]]], [["total", ["en", "es", "fr"]]], [["totales", ["es", "fr"]]]], "top": 314, "pangrams": ["talentos"]}];
+(function(){
+var LANGS=['en','es','fr'];
+var LNAME={en:'English',es:'Español',fr:'Français'};
+var NAMES=['Nibble','Bite','Two Bites','Slice','Cake'];
+var STEP=15;
+var ACC={a:['à','á','â','ä'],e:['é','è','ê','ë'],i:['î','ï','í','ì'],o:['ô','ó','ö','ò'],u:['ù','ú','û','ü'],c:['ç'],n:['ñ'],y:['ÿ']};
+var POS=[[102,4],[187,53],[187,151],[102,200],[17,151],[17,53]];
+function $(id){return document.getElementById(id)}
+function base(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+function lenPts(w){return w.length>7?10:w.length-2}
+function sget(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
+function sset(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function today(){var d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*60000)/86400000)}
+
+var pi=0,P,dict,cousin,order,cur=[],state,pressTimer=null,longFired=false,popup=null,msgTimer=null,msgOn=false;
+
+function start(i){
+  pi=((i%PUZZLES.length)+PUZZLES.length)%PUZZLES.length;
+  P=PUZZLES[pi];dict=P.words;cousin=new Set(P.cousin);order=P.outer.slice();cur=[];
+  state=sget('bc-'+P.id)||{found:{},done:false};
+  sset('bc-current',{i:pi,day:today()});
+  if(state.done){showResults()}else{showGame()}
+}
+function score(){var s=0;for(var w in state.found){var n=state.found[w];s+=lenPts(w)+(n-1)+(cousin.has(w)?1:0)}return s}
+function levelIdx(s){return Math.min(5,Math.floor(s/STEP))}
+function counts(){var c={en:0,es:0,fr:0};for(var w in state.found){var n=state.found[w],ls=dict[w];for(var i=0;i<Math.min(n,ls.length);i++)c[ls[i]]++}return c}
+function dotsHtml(k){var h='';for(var i=0;i<5;i++)h+='<div class="dot'+(i<k?' on':'')+'"></div>';return '<div class="dots" aria-hidden="true">'+h+'</div>'}
+
+function showGame(){
+  $('app').style.display='flex';$('results').classList.remove('on');
+  renderTabs();renderWord();renderBoard();renderPanel();setMsg('','idle',true);fit();
+}
+function renderTabs(){
+  var c=counts();
+  $('tabs').innerHTML=LANGS.map(function(l){return '<div class="tab '+l+'">'+LNAME[l]+' '+c[l]+'</div>'}).join('');
+}
+function renderWord(){
+  var el=$('word');if(msgOn)return;el.classList.remove('m-ok','m-err','m-red','m-yellow');
+  el.innerHTML=cur.length?'<span class="t">'+cur.join('').toUpperCase()+'</span>':'<span class="ph">Tap letters · hold for accents</span>';
+}
+function renderBoard(){
+  var h='';
+  order.forEach(function(l,i){h+='<button type="button" class="bub" data-l="'+l+'" aria-label="'+l.toUpperCase()+'" style="left:'+POS[i][0]+'px;top:'+POS[i][1]+'px">'+l+'</button>'});
+  h+='<button type="button" class="bub c" data-l="'+P.center+'" aria-label="'+P.center.toUpperCase()+', the required letter" style="left:99px;top:99px">'+P.center+'</button>';
+  $('board').innerHTML=h;
+}
+function chipHtml(w){
+  var n=state.found[w],ls=dict[w],first=ls[0];
+  var dots=ls.length>1?'<span class="lg">'+ls.slice(0,n).map(function(){return '<i></i>'}).join('')+'</span>':'';
+  return '<span class="chip '+first+(cousin.has(w)?' cog':'')+'">'+w+dots+'</span>';
+}
+function renderPanel(){
+  var s=score(),k=levelIdx(s),ws=Object.keys(state.found).sort(function(a,b){return base(a).localeCompare(base(b))||a.localeCompare(b)});
+  $('panel').innerHTML='<div class="ph-row"><div class="lvl">'+(k?NAMES[k-1]:'Getting started')+'</div><div class="sc">'+s+' pts</div>'+dotsHtml(k)+'</div>'+
+    (ws.length?'<div class="chips">'+ws.map(chipHtml).join('')+'</div>':'<div class="empty">Words you find will show up here.</div>');
+}
+function setMsg(t,kind,hold){
+  clearTimeout(msgTimer);
+  if(kind==='idle'||!t){msgOn=false;renderWord();return}
+  msgOn=true;var el=$('word');
+  el.classList.remove('m-ok','m-err','m-red','m-yellow');el.classList.add('m-'+kind);
+  el.innerHTML='<span class="mt">'+t+'</span>';
+  if(!hold){msgTimer=setTimeout(function(){msgOn=false;renderWord()},2400)}
+}
+function shake(){var el=$('word');el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake')}
+
+function add(l){if(state.done||cur.length>=24)return;cur.push(l);if(msgOn)setMsg('','idle');renderWord()}
+function del(){if(msgOn)setMsg('','idle');cur.pop();renderWord()}
+function shuffle(){for(var i=order.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=order[i];order[i]=order[j];order[j]=t}closePopup();renderBoard()}
+function bad(msg){shake();setMsg(msg,'err');setTimeout(function(){cur=[];renderWord()},380)}
+
+
+var CELEB={en:'Celebrate!',es:'¡Celebra!',fr:'Célébrons !'};
+function glowBubbles(){var bs=document.querySelectorAll('#board .bub');bs.forEach(function(b){b.classList.remove('glow')});void document.body.offsetWidth;bs.forEach(function(b){b.classList.add('glow')});setTimeout(function(){bs.forEach(function(b){b.classList.remove('glow')})},1200)}
+function cakeCelebrate(l){var el=$('cakepop');$('cakeword').textContent=CELEB[l];el.classList.remove('on');void el.offsetWidth;el.classList.add('on');clearTimeout(window._cakeT);window._cakeT=setTimeout(function(){el.classList.remove('on')},3000)}
+function enter(){
+  if(state.done||!cur.length)return;
+  var w=cur.join('');
+  if(w.length<3)return bad('Too short');
+  if(base(w).indexOf(P.center)<0)return bad('Missing the center letter');
+  var ls=dict[w];
+  if(!ls)return bad('Not in our word list yet');
+  var n=state.found[w]||0;
+  if(n>=ls.length)return bad('Already found');
+  var before=score();
+  state.found[w]=n+1;
+  var pts,isPan=P.letters.every(function(c){return base(w).indexOf(c)>=0});
+  if(n===0){
+    pts=lenPts(w)+(cousin.has(w)?1:0);
+    if(isPan)setMsg('Pangram! +'+pts+(cousin.has(w)?' · cognate':''),'yellow');
+    else if(cousin.has(w))setMsg('Cognate! +'+pts,'red');
+    else setMsg('Nice! +'+pts,'ok');
+  }else{
+    setMsg('Same word, another language! +1','yellow');
+  }
+  if(n===0&&isPan)glowBubbles();
+  if(before<STEP*5&&score()>=STEP*5&&!state.celebrated){state.celebrated=true;cakeCelebrate(ls[n])}
+  sset('bc-'+P.id,state);
+  cur=[];renderWord();renderTabs();renderPanel();
+}
+
+/* accents: hold a bubble */
+function closePopup(){if(popup){popup.remove();popup=null}}
+function showPopup(b,l){
+  closePopup();
+  var bd=$('board'),pop=document.createElement('div');pop.className='pop';
+  pop.innerHTML=ACC[l].map(function(a){return '<button type="button" class="pk" data-a="'+a+'">'+a+'</button>'}).join('');
+  bd.appendChild(pop);
+  var w=pop.offsetWidth,left=b.offsetLeft+b.offsetWidth/2-w/2;
+  left=Math.max(0,Math.min(bd.offsetWidth-w,left));
+  pop.style.left=left+'px';pop.style.top=(b.offsetTop-58)+'px';popup=pop;
+}
+var board=$('board');
+board.addEventListener('contextmenu',function(e){e.preventDefault()});
+board.addEventListener('pointerdown',function(e){
+  var b=e.target.closest('.bub');if(!b)return;
+  longFired=false;clearTimeout(pressTimer);
+  var l=b.dataset.l;
+  if(ACC[l]){pressTimer=setTimeout(function(){longFired=true;showPopup(b,l)},420)}
+});
+board.addEventListener('pointerup',function(e){
+  clearTimeout(pressTimer);
+  var b=e.target.closest('.bub');if(!b)return;
+  if(longFired){longFired=false;return}
+  add(b.dataset.l);
+});
+board.addEventListener('pointercancel',function(){clearTimeout(pressTimer)});
+board.addEventListener('click',function(e){
+  var k=e.target.closest('.pk');if(k){add(k.dataset.a);closePopup()}
+});
+document.addEventListener('pointerdown',function(e){if(!e.target.closest('.pop')&&!e.target.closest('.bub'))closePopup()});
+
+$('del').addEventListener('click',del);
+$('shuf').addEventListener('click',shuffle);
+$('ent').addEventListener('click',enter);
+$('fin').addEventListener('click',function(){$('modal').classList.add('on')});
+$('keep').addEventListener('click',function(){$('modal').classList.remove('on')});
+$('doFin').addEventListener('click',function(){$('modal').classList.remove('on');state.done=true;sset('bc-'+P.id,state);showResults()});
+document.addEventListener('keydown',function(e){
+  if($('modal').classList.contains('on')||state.done||e.metaKey||e.ctrlKey)return;
+  if(e.key==='Enter'){enter();return}
+  if(e.key==='Backspace'){del();return}
+  if(e.key.length===1){var k=e.key.toLowerCase();var bk=base(k);if(P.letters.indexOf(bk)>=0)add(k)}
+});
+
+/* results */
+function got(w){return (state.found[w]||0)>0}
+function showResults(){
+  $('app').style.display='none';$('results').classList.add('on');
+  var s=score(),k=levelIdx(s),all=Object.keys(dict),found=Object.keys(state.found);
+  var missed=all.filter(function(w){return !got(w)});
+  var h='<div class="mark">babblecake</div>';
+  h+='<div class="big">'+(k?NAMES[k-1]:'Nibble?')+'</div>';
+  h+='<div class="sub">'+s+' points · Cake at '+(STEP*5)+'</div>'+dotsHtml(k);
+  h+='<div class="sub">'+found.length+' of '+all.length+' words found</div>';
+  h+='<div class="row2"><button type="button" class="btn" id="share">Share</button><button type="button" class="btn" id="next">Play another</button></div><div class="toast" id="toast"></div>';
+  h+='<div class="sec"><h3>Cognates revealed</h3><div class="note">Words that match across languages. Ringed in red means you found it.</div>';
+  P.groups.forEach(function(g){
+    h+='<div class="card">';
+    g.forEach(function(it){
+      var w=it[0],ls=it[1],f=got(w);
+      var tag=ls.map(function(l){return l}).join(' ');
+      h+='<span class="rv'+(f?' got '+ls[0]:'')+'">'+w+' <small>'+tag+'</small></span>';
+    });
+    h+='</div>';
+  });
+  h+='</div>';
+  h+='<details><summary>Words you missed ('+missed.length+')</summary>';
+  LANGS.forEach(function(l){
+    var ms=missed.filter(function(w){return dict[w].indexOf(l)>=0}).sort(function(a,b){return base(a).localeCompare(base(b))});
+    if(ms.length)h+='<h4>'+LNAME[l]+'</h4><div class="chips">'+ms.map(function(w){return '<span class="rv">'+w+'</span>'}).join('')+'</div>';
+  });
+  h+='</details>';
+  $('resbody').innerHTML=h;
+  $('next').addEventListener('click',function(){start(pi+1);window.scrollTo(0,0)});
+  $('share').addEventListener('click',function(){
+    var cog=0;found.forEach(function(w){if(cousin.has(w))cog++});
+    var t='babblecake No. '+P.num+'\n'+(k?NAMES[k-1]:'Nibble?')+' · '+s+' points\n'+found.length+' words · '+cog+' cognates';
+    shareText(t);
+  });
+  window.scrollTo(0,0);
+}
+function shareText(t){
+  function done(m){$('toast').textContent=m}
+  function fallback(){
+    var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();
+    var ok=false;try{ok=document.execCommand('copy')}catch(e){}
+    ta.remove();done(ok?'Copied to share':t);
+  }
+  if(navigator.share){navigator.share({text:t}).catch(function(){})}
+  else if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){done('Copied to share')}).catch(fallback)}
+  else fallback();
+}
+
+function fit(){
+  var vv=window.visualViewport,vh=vv?vv.height:window.innerHeight,vw=window.innerWidth;
+  var st=getComputedStyle(document.documentElement);
+  var safe=(parseFloat(st.paddingTop)||0)+(parseFloat(st.paddingBottom)||0);
+  $('app').style.height=Math.round(vh-safe)+'px';
+  var k=Math.min(1,(vh-safe-396)/290,(Math.min(vw,430)-32)/290);
+  k=Math.max(0.5,k);
+  var bw=$('bwrap'),bd=$('board');
+  bw.style.width=Math.round(290*k)+'px';bw.style.height=Math.round(290*k)+'px';
+  bd.style.transform='scale('+k+')';
+}
+window.addEventListener('resize',fit);
+if(window.visualViewport)window.visualViewport.addEventListener('resize',fit);
+
+var cs=sget('bc-current');
+start(cs&&cs.day===today()?cs.i:today());
+})();
+</script>
+</body>
+</html>
