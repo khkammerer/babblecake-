@@ -75,6 +75,8 @@ button{font-family:inherit}
 .chip .lg{display:flex;gap:3px}
 .chip .lg i{width:8px;height:8px;border-radius:50%;display:block;border:1.5px solid currentColor;opacity:.85}
 .empty{font-size:13px;color:var(--dim)}
+.chip.q{cursor:pointer}
+.chip .qm{font-weight:700;opacity:.8}
 #modal{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(5,10,30,0.72);display:none;align-items:center;justify-content:center;padding:0 30px;z-index:50}
 #modal.on{display:flex}
 .dlg{width:100%;max-width:360px;border-radius:18px;background:var(--panel);border:2px solid var(--bubble);padding:24px 22px;display:flex;flex-direction:column;gap:12px}
@@ -162,12 +164,13 @@ function sget(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return 
 function sset(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function today(){var d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*60000)/86400000)}
 
-var pi=0,P,dict,cousin,order,cur=[],state,pressTimer=null,longFired=false,popup=null,msgTimer=null,msgOn=false;
+var pi=0,P,dict,cousin,fam,order,cur=[],state,pressTimer=null,longFired=false,popup=null,msgTimer=null,msgOn=false;
 
 function start(i){
   pi=((i%PUZZLES.length)+PUZZLES.length)%PUZZLES.length;
   P=PUZZLES[pi];dict=P.words;cousin=new Set(P.cousin);order=P.outer.slice();cur=[];
-  state=sget('bc-'+P.id)||{found:{},done:false};
+  fam={};P.groups.forEach(function(g){if(g.length>1)g.forEach(function(it){var o=g.map(function(x){return x[0]}).filter(function(x){return x!==it[0]});fam[it[0]]=(fam[it[0]]||[]).concat(o)})});
+  state=sget('bc-'+P.id)||{found:{},done:false};state.q=state.q||{};
   sset('bc-current',{i:pi,day:today()});
   if(state.done){showResults()}else{showGame()}
 }
@@ -195,9 +198,8 @@ function renderBoard(){
   $('board').innerHTML=h;
 }
 function chipHtml(w){
-  var n=state.found[w],ls=dict[w],first=ls[0];
-  var dots=ls.length>1?'<span class="lg">'+ls.slice(0,n).map(function(){return '<i></i>'}).join('')+'</span>':'';
-  return '<span class="chip '+first+(cousin.has(w)?' cog':'')+'">'+w+dots+'</span>';
+  var q=state.q&&state.q[w];
+  return '<span class="chip '+dict[w][0]+(q?' q':'')+'" data-w="'+w+'">'+w+(q?'<span class="qm" aria-label="Open question">?</span>':'')+'</span>';
 }
 function renderPanel(){
   var s=score(),k=levelIdx(s),ws=Object.keys(state.found).sort(function(a,b){return base(a).localeCompare(base(b))||a.localeCompare(b)});
@@ -223,13 +225,18 @@ function bad(msg){shake();setMsg(msg,'err');setTimeout(function(){cur=[];renderW
 var CELEB={en:'Celebrate!',es:'¡Celebra!',fr:'Célébrons !'};
 function glowBubbles(){var bs=document.querySelectorAll('#board .bub');bs.forEach(function(b){b.classList.remove('glow')});void document.body.offsetWidth;bs.forEach(function(b){b.classList.add('glow')});setTimeout(function(){bs.forEach(function(b){b.classList.remove('glow')})},1200)}
 function cakeCelebrate(l){var el=$('cakepop');$('cakeword').textContent=CELEB[l];el.classList.remove('on');void el.offsetWidth;el.classList.add('on');clearTimeout(window._cakeT);window._cakeT=setTimeout(function(){el.classList.remove('on')},3000)}
+var QTXT={en:'A second spelling?',es:'¿Otra ortografía?',fr:'Une autre orthographe ?'};
+var REGRET={en:'Regrets…',es:'Lo siento…',fr:'Désolé…'};
+function lev(a,b){var p=[],i,j;for(j=0;j<=b.length;j++)p.push(j);for(i=1;i<=a.length;i++){var c=[i];for(j=1;j<=b.length;j++)c.push(Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]!==b[j-1]?1:0)));p=c}return p[b.length]}
+function near(a,b){var A=base(a),B=base(b);if(A===B||Math.min(A.length,B.length)<3)return false;var d=lev(A,B);return d<=3&&d/Math.max(A.length,B.length)<=0.4}
+function closeBluffs(w){for(var x in state.q){if(state.q[x]==='bluff'&&near(w,x))delete state.q[x]}}
 function enter(){
   if(state.done||!cur.length)return;
   var w=cur.join('');
   if(w.length<3)return bad('Too short');
   if(base(w).indexOf(P.center)<0)return bad('Missing the center letter');
   var ls=dict[w];
-  if(!ls)return bad('Not in our word list yet');
+  if(!ls){var qx=Object.keys(state.q).filter(function(x){return near(w,x)});if(qx.length){var rl=dict[qx[0]][0];closeBluffs(w);sset('bc-'+P.id,state);renderPanel();return bad(REGRET[rl])}return bad('Not in our word list yet')}
   var n=state.found[w]||0;
   if(n>=ls.length)return bad('Already found');
   var before=score();
@@ -237,11 +244,19 @@ function enter(){
   var pts,isPan=P.letters.every(function(c){return base(w).indexOf(c)>=0});
   if(n===0){
     pts=lenPts(w)+(cousin.has(w)?1:0);
-    if(isPan)setMsg('Pangram! +'+pts+(cousin.has(w)?' · cognate':''),'yellow');
-    else if(cousin.has(w))setMsg('Cognate! +'+pts,'red');
-    else setMsg('Nice! +'+pts,'ok');
+    var fm=fam[w]||[],cel=fm.some(function(x){return got(x)});
+    for(var x in state.q){if(state.q[x]==='real'&&fam[x]&&fam[x].indexOf(w)>=0){delete state.q[x];cel=true}}
+    closeBluffs(w);
+    var qt='';
+    if(!cel){
+      if(fm.length&&Math.random()<0.4){state.q[w]='real';qt=' · '+QTXT[ls[0]]}
+      else if(!fm.length&&Math.random()<0.15){state.q[w]='bluff';qt=' · '+QTXT[ls[0]]}
+    }
+    if(isPan)setMsg('Pangram! +'+pts+(cel?' · Cognates!':'')+qt,'yellow');
+    else if(cel)setMsg('Cognates! +'+pts,'yellow');
+    else setMsg('Nice! +'+pts+qt,'ok');
   }else{
-    setMsg('Same word, another language! +1','yellow');
+    setMsg('Nice! +1','ok');
   }
   if(n===0&&isPan)glowBubbles();
   if(before<STEP*5&&score()>=STEP*5&&!state.celebrated){state.celebrated=true;cakeCelebrate(ls[n])}
@@ -280,6 +295,7 @@ board.addEventListener('click',function(e){
 });
 document.addEventListener('pointerdown',function(e){if(!e.target.closest('.pop')&&!e.target.closest('.bub'))closePopup()});
 
+$('panel').addEventListener('click',function(e){var c=e.target.closest('.chip.q');if(!c||state.done)return;delete state.q[c.dataset.w];sset('bc-'+P.id,state);renderPanel()});
 $('del').addEventListener('click',del);
 $('shuf').addEventListener('click',shuffle);
 $('ent').addEventListener('click',enter);
