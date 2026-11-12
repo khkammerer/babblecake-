@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0b">
+<title>Sasha Bingo</title>
+<style>
+:root{
+  --black:#0b0b0b; --panel:#1b1b1b; --edge:#3a3a3a;
+  --red:#d6001c; --red-dark:#8f0012; --white:#ffffff; --gold:#ffd23f;
+}
+*{box-sizing:border-box}
+html{background:var(--black)}
+body{
+  margin:0; min-height:100vh; min-height:100dvh;
+  background:radial-gradient(ellipse at top,#2a0006 0%,var(--black) 60%) no-repeat,var(--black);
+  color:var(--white);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-tap-highlight-color:transparent;
+  padding:max(10px,env(safe-area-inset-top)) 8px max(14px,env(safe-area-inset-bottom));
+  display:flex; flex-direction:column; align-items:center;
+}
+main{width:100%; max-width:560px}
+h1{
+  margin:4px 0 2px; text-align:center; font-size:clamp(30px,9vw,48px);
+  font-weight:900; letter-spacing:.04em; text-transform:uppercase; line-height:1.05;
+}
+h1 span{color:var(--red)}
+.sub{margin:0 0 10px; text-align:center; color:#c9c9c9; font-size:clamp(14px,4vw,18px)}
+.board{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:5px;
+  border:3px solid var(--red); border-radius:14px; padding:5px; background:var(--red-dark);
+}
+.cell{
+  position:relative; aspect-ratio:1/1.22; min-width:0;
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  padding:3px; margin:0; border:2px solid var(--edge); border-radius:9px;
+  background:var(--panel); color:var(--white); font:inherit;
+  font-size:min(3.1vw,19px); font-weight:800; line-height:1.15;
+  overflow-wrap:anywhere; hyphens:none; cursor:pointer;
+  touch-action:manipulation; user-select:none; -webkit-user-select:none;
+  transition:background .12s,transform .08s;
+}
+.cell.mid{font-size:min(2.85vw,17px)}
+.cell.long{font-size:min(2.7vw,16px)}
+.cell:active{transform:scale(.96)}
+.cell.on{
+  background:var(--red); border-color:#ff6a7c; color:var(--white);
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.25);
+}
+.cell.on::after{
+  content:"✓"; position:absolute; top:1px; right:4px; font-size:1.05em; font-weight:900; color:#fff; opacity:.9;
+}
+.cell.win{border-color:var(--gold); box-shadow:0 0 0 2px var(--gold),0 0 14px var(--gold); z-index:1}
+.cell.free{background:#fff; padding:0; flex-direction:column; justify-content:flex-start; overflow:hidden; border-color:var(--red)}
+.cell.free img{width:100%; flex:1; min-height:0; object-fit:contain; display:block; pointer-events:none; margin-top:2px}
+.cell.free .cap{
+  width:100%; background:var(--black); color:#fff; font-size:.95em; font-weight:900;
+  letter-spacing:.03em; padding:3px 0 4px; text-transform:uppercase;
+}
+.cell.free.on{border-color:var(--gold)}
+.cell.free.on .cap{background:var(--red)}
+.cell.free.on::after{color:var(--red)}
+.status{
+  margin:12px 0 8px; text-align:center; font-size:clamp(16px,4.6vw,22px); font-weight:700; min-height:1.4em;
+}
+.status b{color:var(--red)}
+.actions{display:flex; justify-content:center}
+button.new{
+  font:inherit; font-weight:700; font-size:clamp(15px,4.2vw,18px); color:#fff; background:transparent;
+  border:2px solid var(--edge); border-radius:999px; padding:10px 20px; cursor:pointer; touch-action:manipulation;
+}
+button.new:active{background:var(--panel)}
+#bingo{
+  position:fixed; inset:0; display:none; align-items:center; justify-content:center; flex-direction:column;
+  background:rgba(0,0,0,.82); z-index:10; text-align:center; padding:20px; cursor:pointer;
+}
+#bingo.show{display:flex}
+#bingo .big{
+  font-size:clamp(64px,24vw,150px); font-weight:900; color:#fff; line-height:1; letter-spacing:.02em;
+  text-shadow:0 0 0 var(--red),4px 4px 0 var(--red),8px 8px 0 var(--red-dark);
+  animation:pop .5s cubic-bezier(.2,1.6,.4,1);
+}
+#bingo .tap{margin-top:26px; font-size:clamp(16px,4.5vw,22px); color:#ddd}
+@keyframes pop{from{transform:scale(.2) rotate(-8deg);opacity:0}to{transform:none;opacity:1}}
+.confetti{position:fixed; top:-20px; width:10px; height:16px; z-index:11; pointer-events:none; animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+@media (prefers-reduced-motion:reduce){#bingo .big{animation:none}.confetti{display:none}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Sasha <span>Bingo</span></h1>
+  <p class="sub">Tap a square when you hear it. Get 4 in a row!</p>
+  <div class="board" id="board" role="grid" aria-label="Bingo card"></div>
+  <div class="status" id="status" aria-live="polite"></div>
+  <div class="actions"><button class="new" id="newCard" type="button">New card</button></div>
+</main>
+<div id="bingo" role="alert" aria-live="assertive"><div class="big">BINGO!</div><div class="tap">Tap anywhere to keep playing</div></div>
+
+<script>
+(function(){
+  var PHRASES=[
+    "Aggravate/aggravating/aggravation",
+    "Don't piss me off.",
+    "Stay on the right side.",
+    "I don't know why…",
+    "Annoying/Annoyed",
+    "These people.",
+    "Let me tell you something…",
+    "Because, you know…",
+    "I told you…",
+    "Don't get beat up.",
+    "You're a fool.",
+    "I'll fight ya.",
+    "Not today…",
+    "Can I tell you something…",
+    "You heard what I said…"
+  ];
+  var KEY="sashaBingoCard.v1";
+  var LINES=[];
+  for(var i=0;i<4;i++){
+    LINES.push([i*4,i*4+1,i*4+2,i*4+3]);   // rows
+    LINES.push([i,i+4,i+8,i+12]);          // columns
+  }
+  LINES.push([0,5,10,15],[3,6,9,12]);      // diagonals
+
+  var board=document.getElementById("board");
+  var statusEl=document.getElementById("status");
+  var overlay=document.getElementById("bingo");
+  var state; // {order:[ids 0..15, 15 = free], marked:[bool x16]}
+  var hideTimer;
+
+  function shuffle(a){
+    for(var i=a.length-1;i>0;i--){
+      var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t;
+    }
+    return a;
+  }
+  function newState(){
+    var order=[];for(var i=0;i<16;i++)order.push(i);
+    shuffle(order);
+    var marked=[];for(var k=0;k<16;k++)marked.push(order[k]===15);
+    return {order:order,marked:marked};
+  }
+  function load(){
+    try{
+      var s=JSON.parse(localStorage.getItem(KEY));
+      if(s&&s.order&&s.order.length===16&&s.marked&&s.marked.length===16){
+        var seen={};
+        for(var i=0;i<16;i++){ if(s.order[i]<0||s.order[i]>15||seen[s.order[i]])return null; seen[s.order[i]]=1; }
+        for(var k=0;k<16;k++){ if(s.order[k]===15)s.marked[k]=true; }
+        return s;
+      }
+    }catch(e){}
+    return null;
+  }
+  function save(){ try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){} }
+
+  function setPhrase(el,text){
+    // Allow line breaks after slashes without changing the words.
+    var parts=text.split("/");
+    parts.forEach(function(p,i){
+      el.appendChild(document.createTextNode(p.replace(/\u2026/,'\u2060\u2026')+(i<parts.length-1?"/":"")));
+      if(i<parts.length-1)el.appendChild(document.createElement("wbr"));
+    });
+  }
+
+  function winningLines(){
+    return LINES.filter(function(l){return l.every(function(i){return state.marked[i];});});
+  }
+
+  function render(){
+    board.innerHTML="";
+    state.order.forEach(function(id,pos){
+      var b=document.createElement("button");
+      b.type="button"; b.className="cell"; b.dataset.pos=pos;
+      if(id===15){
+        b.classList.add("free");
+        var img=document.createElement("img"); img.src="jordans.jpg"; img.alt="Red and black Jordan sneaker"; img.draggable=false;
+        var cap=document.createElement("div"); cap.className="cap"; cap.textContent="Jordans";
+        b.appendChild(img); b.appendChild(cap);
+        b.setAttribute("aria-label","Free square: Jordans");
+      }else{
+        setPhrase(b,PHRASES[id]);
+        if(id===0)b.classList.add('long');
+        if(id===6||id===13)b.classList.add('mid');
+      }
+      b.setAttribute("aria-pressed",state.marked[pos]?"true":"false");
+      if(state.marked[pos])b.classList.add("on");
+      b.addEventListener("click",function(){toggle(pos);});
+      board.appendChild(b);
+    });
+    refresh(false);
+  }
+
+  function refresh(announce,prevCount){
+    var wins=winningLines();
+    var inWin={};
+    wins.forEach(function(l){l.forEach(function(i){inWin[i]=1;});});
+    var cells=board.children;
+    for(var i=0;i<16;i++){
+      cells[i].classList.toggle("on",!!state.marked[i]);
+      cells[i].classList.toggle("win",!!inWin[i]);
+      cells[i].setAttribute("aria-pressed",state.marked[i]?"true":"false");
+    }
+    var n=wins.length;
+    statusEl.innerHTML=n?"<b>BINGO!</b> "+n+(n===1?" line":" lines")+" — keep playing!":"";
+    if(announce&&n>prevCount)showBingo();
+  }
+
+  function toggle(pos){
+    if(state.order[pos]===15)return; // free square always stays marked
+    var prev=winningLines().length;
+    state.marked[pos]=!state.marked[pos];
+    save();
+    refresh(true,prev);
+  }
+
+  function showBingo(){
+    overlay.classList.add("show");
+    try{ if(navigator.vibrate)navigator.vibrate([120,60,120]); }catch(e){}
+    confetti();
+    clearTimeout(hideTimer);
+    hideTimer=setTimeout(hideBingo,3500);
+  }
+  function hideBingo(){ overlay.classList.remove("show"); }
+  overlay.addEventListener("click",hideBingo);
+
+  function confetti(){
+    var colors=["#d6001c","#ffffff","#ffd23f","#ff4d5e","#999"];
+    for(var i=0;i<60;i++){
+      var c=document.createElement("div"); c.className="confetti";
+      c.style.left=Math.random()*100+"vw";
+      c.style.background=colors[i%colors.length];
+      c.style.animationDuration=(1.6+Math.random()*1.8)+"s";
+      c.style.animationDelay=(Math.random()*.4)+"s";
+      document.body.appendChild(c);
+      setTimeout((function(el){return function(){el.remove();};})(c),4200);
+    }
+  }
+
+  document.getElementById("newCard").addEventListener("click",function(){
+    if(window.confirm("Get a new shuffled card? This clears your marks.")){
+      state=newState(); save(); hideBingo(); render();
+    }
+  });
+
+  state=load()||newState();
+  save();
+  render();
+})();
+</script>
+</body>
+</html>
