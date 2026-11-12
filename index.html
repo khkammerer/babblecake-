@@ -54,7 +54,7 @@ h1 span{color:var(--red)}
 }
 .cell.win{border-color:var(--gold); box-shadow:0 0 0 2px var(--gold),0 0 14px var(--gold); z-index:1}
 .cell.free{background:var(--black); padding:0; flex-direction:column; justify-content:flex-start; overflow:hidden; border-color:var(--red)}
-.cell.free img{width:100%; flex:1; min-height:0; object-fit:cover; object-position:50% 30%; display:block; pointer-events:none}
+.cell.free img{width:100%; height:100%; flex:1; min-height:0; object-fit:cover; object-position:50% 30%; display:block; pointer-events:none}
 .cell.free .cap{width:100%; background:var(--red); color:#fff; font-size:.95em; font-weight:900; letter-spacing:.03em; padding:3px 0 4px; text-transform:uppercase}
 .cell.free.on{border-color:var(--gold)}
 .cell.free::after{color:#fff; text-shadow:0 0 3px #000,0 0 3px #000}
@@ -175,9 +175,8 @@ button.new:active{background:var(--panel)}
       if(id===15){
         b.classList.add("free");
         var img=document.createElement("img"); img.src="free.jpg"; img.alt="Free square"; img.draggable=false;
-        var cap=document.createElement("div"); cap.className="cap"; cap.textContent="Jordans";
-        b.appendChild(img); b.appendChild(cap);
-        b.setAttribute("aria-label","Free square: Jordans");
+        b.appendChild(img);
+        b.setAttribute("aria-label","Free square");
       }else{
         setPhrase(b,PHRASES[id]);
         if(id===0)b.classList.add('long');
