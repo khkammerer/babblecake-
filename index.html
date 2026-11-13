@@ -54,7 +54,7 @@ h1 span{color:var(--red)}
 }
 .cell.win{border-color:var(--gold); box-shadow:0 0 0 2px var(--gold),0 0 14px var(--gold); z-index:1}
 .cell.free{background:var(--black); padding:0; flex-direction:column; justify-content:flex-start; overflow:hidden; border-color:var(--red)}
-.cell.free img{width:100%; height:100%; flex:1; min-height:0; object-fit:cover; object-position:50% 30%; display:block; pointer-events:none}
+.cell.free img{width:100%; height:100%; flex:1; min-height:0; object-fit:cover; object-position:50% 40%; display:block; pointer-events:none}
 .cell.free .cap{width:100%; background:var(--red); color:#fff; font-size:.95em; font-weight:900; letter-spacing:.03em; padding:3px 0 4px; text-transform:uppercase}
 .cell.free.on{border-color:var(--gold)}
 .cell.free::after{color:#fff; text-shadow:0 0 3px #000,0 0 3px #000}
@@ -88,7 +88,7 @@ button.new:active{background:var(--panel)}
 <body>
 <main>
   <h1>Sasha <span>Bingo</span></h1>
-  <p class="sub">Tap a square when you hear it. Get 4 in a row!</p>
+  <p class="sub">When you hear the word or phrase -- tap the card!</p>
   <div class="board" id="board" role="grid" aria-label="Bingo card"></div>
   <div class="status" id="status" aria-live="polite"></div>
   <div class="actions"><button class="new" id="newCard" type="button">New card</button></div>
@@ -174,7 +174,7 @@ button.new:active{background:var(--panel)}
       b.type="button"; b.className="cell"; b.dataset.pos=pos;
       if(id===15){
         b.classList.add("free");
-        var img=document.createElement("img"); img.src="free.jpg"; img.alt="Free square"; img.draggable=false;
+        var img=document.createElement("img"); img.src="free2.jpg"; img.alt="Free square"; img.draggable=false;
         b.appendChild(img);
         b.setAttribute("aria-label","Free square");
       }else{
