@@ -6,6 +6,8 @@
 <meta name="theme-color" content="#0b0b0b">
 <title>Sasha Bingo</title>
 <style>
+/* Barlow Condensed ExtraBold, SIL Open Font License 1.1 */
+@font-face{font-family:"BarlowC";src:url(barlow800.ttf) format("truetype");font-weight:800;font-display:swap}
 :root{
   --black:#0b0b0b; --panel:#262626; --edge:#4a4a4a;
   --red:#d6001c; --red-dark:#8f0012; --white:#ffffff; --gold:#ffd23f;
@@ -36,19 +38,21 @@ h1 span{color:var(--red)}
   position:relative; aspect-ratio:1/1.3; min-width:0;
   display:flex; align-items:center; justify-content:center; text-align:center;
   padding:4px 2px; margin:0; border:2px solid var(--edge); border-radius:9px;
-  background:var(--panel); color:var(--white); font:inherit;
-  font-size:min(2.85vw,17px); font-weight:800; line-height:1.18;
-  overflow-wrap:anywhere; hyphens:none; text-wrap:balance; cursor:pointer;
-  touch-action:manipulation; user-select:none; -webkit-user-select:none;
+  background:var(--panel); color:var(--white);
+  font-family:"BarlowC","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  font-size:var(--fs,16px); font-weight:800; line-height:1.08; letter-spacing:.01em;
+  cursor:pointer; touch-action:manipulation; user-select:none; -webkit-user-select:none;
   transition:background .12s,transform .08s;
 }
+.txt{display:flex; flex-direction:column; align-items:center}
+.txt span{display:block; white-space:nowrap}
 .cell:active{transform:scale(.96)}
 .cell.on{
   background:var(--red); border-color:#ff6a7c; color:var(--white);
   box-shadow:inset 0 0 0 2px rgba(255,255,255,.25);
 }
 .cell.on::after{
-  content:"✓"; position:absolute; top:1px; right:4px; font-size:1.05em; font-weight:900; color:#fff; opacity:.9;
+  content:"✓"; position:absolute; top:0; right:3px; font-family:system-ui,sans-serif; font-size:12px; font-weight:900; color:#fff; opacity:.9;
 }
 .cell.win{border-color:var(--gold); box-shadow:0 0 0 2px var(--gold),0 0 14px var(--gold); z-index:1}
 .cell.free{background:var(--black); padding:0; flex-direction:column; justify-content:flex-start; overflow:hidden; border-color:var(--red)}
@@ -96,22 +100,23 @@ button.new:active{background:var(--panel)}
 
 <script>
 (function(){
+  // Each phrase is shown on hand-picked lines, so no single word is left hanging.
   var PHRASES=[
-    "Aggravate/aggravating/aggravation",
-    "Don't piss me off.",
-    "Stay on the right side.",
-    "I don't know why…",
-    "Annoying/Annoyed",
-    "These people.",
-    "Let me tell you something…",
-    "Because, you know…",
-    "I told you…",
-    "Don't get beat up.",
-    "You're a fool.",
-    "I'll fight ya.",
-    "Not today…",
-    "Can I tell you something…",
-    "You heard what I said…"
+    {say:"Aggravate, aggravated, aggravating, aggravation", lines:["aggra-","-vate","-vated","-vating","-vation"]},
+    {say:"Don't piss me off.", lines:["Don't piss","me off."]},
+    {say:"Stay on the right side.", lines:["Stay on the","right side."]},
+    {say:"I don't know why\u2026", lines:["I don't","know why\u2026"]},
+    {say:"Annoy, annoyed, annoying, annoyance", lines:["annoy-","-ed","-ing","-ance"]},
+    {say:"These people.", lines:["These","people."]},
+    {say:"Let me tell you something\u2026", lines:["Let me","tell you","something\u2026"]},
+    {say:"Because, you know\u2026", lines:["Because,","you know\u2026"]},
+    {say:"I told you\u2026", lines:["I told you\u2026"]},
+    {say:"Don't get beat up.", lines:["Don't get","beat up."]},
+    {say:"You're a fool.", lines:["You're","a fool."]},
+    {say:"I'll fight ya.", lines:["I'll","fight ya."]},
+    {say:"Not today\u2026", lines:["Not today\u2026"]},
+    {say:"Can I tell you something\u2026", lines:["Can I","tell you","something\u2026"]},
+    {say:"You heard what I said\u2026", lines:["You","heard what","I said\u2026"]}
   ];
   var KEY="sashaBingoCard.v1";
   var LINES=[];
@@ -153,13 +158,31 @@ button.new:active{background:var(--panel)}
   }
   function save(){ try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){} }
 
-  function setPhrase(el,text){
-    // Allow line breaks after slashes without changing the words.
-    var parts=text.split("/");
-    parts.forEach(function(p,i){
-      el.appendChild(document.createTextNode(p.replace(/\u2026/,'\u2060\u2026')+(i<parts.length-1?"/":"")));
-      if(i<parts.length-1)el.appendChild(document.createElement("wbr"));
-    });
+  function setPhrase(el,ph){
+    var box=document.createElement("div"); box.className="txt";
+    ph.lines.forEach(function(l){var sp=document.createElement("span"); sp.textContent=l; box.appendChild(sp);});
+    el.appendChild(box);
+    el.setAttribute("aria-label",ph.say);
+  }
+
+  // One text size for every square: the biggest size at which every line still fits.
+  function fit(){
+    var cells=board.querySelectorAll(".cell:not(.free)");
+    if(!cells.length)return;
+    var lo=7,hi=34;
+    function ok(f){
+      board.style.setProperty("--fs",f+"px");
+      for(var i=0;i<cells.length;i++){
+        var c=cells[i],t=c.firstChild;
+        var cs=getComputedStyle(c);
+        var aw=c.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;
+        var ah=c.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-2;
+        if(t.scrollWidth>aw||t.offsetHeight>ah)return false;
+      }
+      return true;
+    }
+    for(var n=0;n<14;n++){var mid=(lo+hi)/2; if(ok(mid))lo=mid; else hi=mid;}
+    board.style.setProperty("--fs",lo+"px");
   }
 
   function winningLines(){
@@ -185,6 +208,7 @@ button.new:active{background:var(--panel)}
       board.appendChild(b);
     });
     refresh(false);
+    fit();
   }
 
   function refresh(announce,prevCount){
@@ -244,6 +268,10 @@ button.new:active{background:var(--panel)}
       state.marked=state.order.map(function(id){return id===15;}); save(); hideBingo(); refresh(false);
     }
   });
+
+  window.addEventListener("resize",fit);
+  if(document.fonts&&document.fonts.load){document.fonts.load("800 16px BarlowC").then(fit,fit);document.fonts.ready.then(fit);}
+  window.addEventListener("load",fit);
 
   state=load()||newState();
   save();
