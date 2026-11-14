@@ -29,7 +29,8 @@ h1{
   font-weight:900; letter-spacing:.04em; text-transform:uppercase; line-height:1.05;
 }
 h1 span{color:var(--red)}
-.sub{margin:0 0 10px; text-align:center; color:#c9c9c9; font-size:clamp(14px,4vw,18px)}
+.sub{margin:0; text-align:center; color:#c9c9c9; font-size:clamp(14px,4vw,18px)}
+.sub2{margin:2px 0 10px; text-align:center; color:#ff4d5e; font-weight:800; font-size:clamp(16px,4.6vw,21px)}
 .board{
   display:grid; grid-template-columns:repeat(4,1fr); gap:4px;
   border:3px solid var(--red); border-radius:14px; padding:4px; background:var(--red-dark);
@@ -54,12 +55,14 @@ h1 span{color:var(--red)}
 .cell.on::after{
   content:"✓"; position:absolute; top:0; right:3px; font-family:system-ui,sans-serif; font-size:12px; font-weight:900; color:#fff; opacity:.9;
 }
-.cell.win{border-color:var(--gold); box-shadow:0 0 0 2px var(--gold),0 0 14px var(--gold); z-index:1}
 .cell.free{background:var(--black); padding:0; flex-direction:column; justify-content:flex-start; overflow:hidden; border-color:var(--red)}
 .cell.free img{width:100%; height:100%; flex:1; min-height:0; object-fit:cover; object-position:50% 40%; display:block; pointer-events:none}
 .cell.free .cap{width:100%; background:var(--red); color:#fff; font-size:.95em; font-weight:900; letter-spacing:.03em; padding:3px 0 4px; text-transform:uppercase}
 .cell.free.on{border-color:var(--gold)}
 .cell.free::after{color:#fff; text-shadow:0 0 3px #000,0 0 3px #000}
+.yes{position:fixed; z-index:9; pointer-events:none; transform:translateX(-50%); font-family:"BarlowC","Arial Narrow",system-ui,sans-serif; font-weight:800; font-size:26px; color:#fff; text-shadow:0 2px 0 var(--red-dark),0 0 8px rgba(0,0,0,.8); animation:rise .9s ease-out forwards}
+@keyframes rise{0%{opacity:0; transform:translate(-50%,6px) scale(.7)}20%{opacity:1; transform:translate(-50%,-6px) scale(1.1)}100%{opacity:0; transform:translate(-50%,-52px) scale(1)}}
+@media (prefers-reduced-motion:reduce){.yes{animation:none; opacity:0}}
 .status{
   margin:12px 0 8px; text-align:center; font-size:clamp(16px,4.6vw,22px); font-weight:700; min-height:1.4em;
 }
@@ -91,6 +94,7 @@ button.new:active{background:var(--panel)}
 <main>
   <h1>Sasha <span>Bingo</span></h1>
   <p class="sub">When you hear the word or phrase -- tap the card!</p>
+  <p class="sub2">How many will you hear today?</p>
   <div class="board" id="board" role="grid" aria-label="Bingo card"></div>
   <div class="status" id="status" aria-live="polite"></div>
   <div class="actions"><button class="new" id="newCard" type="button">New card</button>
@@ -119,12 +123,6 @@ button.new:active{background:var(--panel)}
     {say:"You heard what I said\u2026", lines:["You heard","what I said\u2026"]}
   ];
   var KEY="sashaBingoCard.v1";
-  var LINES=[];
-  for(var i=0;i<4;i++){
-    LINES.push([i*4,i*4+1,i*4+2,i*4+3]);   // rows
-    LINES.push([i,i+4,i+8,i+12]);          // columns
-  }
-  LINES.push([0,5,10,15],[3,6,9,12]);      // diagonals
 
   var board=document.getElementById("board");
   var statusEl=document.getElementById("status");
@@ -142,7 +140,7 @@ button.new:active{background:var(--panel)}
     var order=[];for(var i=0;i<16;i++)order.push(i);
     shuffle(order);
     var marked=[];for(var k=0;k<16;k++)marked.push(order[k]===15);
-    return {order:order,marked:marked};
+    return {order:order,marked:marked,shown:[]};
   }
   function load(){
     try{
@@ -151,6 +149,7 @@ button.new:active{background:var(--panel)}
         var seen={};
         for(var i=0;i<16;i++){ if(s.order[i]<0||s.order[i]>15||seen[s.order[i]])return null; seen[s.order[i]]=1; }
         for(var k=0;k<16;k++){ if(s.order[k]===15)s.marked[k]=true; }
+        if(!Array.isArray(s.shown))s.shown=[];
         return s;
       }
     }catch(e){}
@@ -185,10 +184,6 @@ button.new:active{background:var(--panel)}
     board.style.setProperty("--fs",lo+"px");
   }
 
-  function winningLines(){
-    return LINES.filter(function(l){return l.every(function(i){return state.marked[i];});});
-  }
-
   function render(){
     board.innerHTML="";
     state.order.forEach(function(id,pos){
@@ -207,31 +202,54 @@ button.new:active{background:var(--panel)}
       b.addEventListener("click",function(){toggle(pos);});
       board.appendChild(b);
     });
-    refresh(false);
+    refresh();
     fit();
   }
 
-  function refresh(announce,prevCount){
-    var wins=winningLines();
-    var inWin={};
-    wins.forEach(function(l){l.forEach(function(i){inWin[i]=1;});});
+  function markedCount(){ // squares marked, not counting the free one
+    var n=0; for(var i=0;i<16;i++){ if(state.marked[i]&&state.order[i]!==15)n++; }
+    return n;
+  }
+  function allMarked(){ return state.marked.every(function(m){return m;}); }
+
+  function refresh(){
     var cells=board.children;
     for(var i=0;i<16;i++){
       cells[i].classList.toggle("on",!!state.marked[i]);
-      cells[i].classList.toggle("win",!!inWin[i]);
       cells[i].setAttribute("aria-pressed",state.marked[i]?"true":"false");
     }
-    var n=wins.length;
-    statusEl.innerHTML=n?"<b>BINGO!</b> "+n+(n===1?" line":" lines")+" — keep playing!":"";
-    if(announce&&n>prevCount)showBingo();
+  }
+
+  function say(text,el){
+    var r=el.getBoundingClientRect();
+    var d=document.createElement("div"); d.className="yes"; d.textContent=text;
+    d.style.left=(r.left+r.width/2)+"px"; d.style.top=(r.top-8)+"px";
+    document.body.appendChild(d);
+    setTimeout(function(){d.remove();},1000);
+  }
+  var statusTimer;
+  function cheer(text){
+    statusEl.textContent=text;
+    clearTimeout(statusTimer);
+    statusTimer=setTimeout(function(){statusEl.textContent="";},2600);
   }
 
   function toggle(pos){
     if(state.order[pos]===15)return; // free square always stays marked
-    var prev=winningLines().length;
+    var wasFull=allMarked();
     state.marked[pos]=!state.marked[pos];
+    refresh();
+    if(state.marked[pos]){
+      try{ if(navigator.vibrate)navigator.vibrate(15); }catch(e){}
+      var full=allMarked();
+      if(full&&!wasFull){ showBingo(); }
+      else{
+        say("Yes!",board.children[pos]);
+        var n=markedCount();
+        if([3,6,9,12].indexOf(n)>=0&&state.shown.indexOf(n)<0){ state.shown.push(n); cheer("Keep going!"); }
+      }
+    }
     save();
-    refresh(true,prev);
   }
 
   function showBingo(){
@@ -265,7 +283,7 @@ button.new:active{background:var(--panel)}
 
   document.getElementById("clearMarks").addEventListener("click",function(){
     if(window.confirm("Clear all your marks? Your card stays the same.")){
-      state.marked=state.order.map(function(id){return id===15;}); save(); hideBingo(); refresh(false);
+      state.marked=state.order.map(function(id){return id===15;}); state.shown=[]; statusEl.textContent=""; save(); hideBingo(); refresh();
     }
   });
 
