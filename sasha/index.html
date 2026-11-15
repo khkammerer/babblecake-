@@ -20,7 +20,7 @@ body{
   color:var(--white);
   font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   -webkit-tap-highlight-color:transparent;
-  padding:max(10px,env(safe-area-inset-top)) 5px max(18px,env(safe-area-inset-bottom));
+  padding:max(10px,env(safe-area-inset-top)) 5px calc(max(18px,env(safe-area-inset-bottom)) + 110px); /* extra room so the browser's floating toolbar doesn't cover the buttons */
   display:flex; flex-direction:column; align-items:center;
 }
 main{width:100%; max-width:560px}
